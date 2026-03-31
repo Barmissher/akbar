@@ -146,6 +146,23 @@
   .rx-wild   { color: #c77dff; }
   .rx-plus   { color: #ff6b6b; }
 
+  .rx-clickable {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 1px 3px;
+    transition: background 0.15s, color 0.15s;
+    text-decoration: underline dotted #6bcbff55;
+  }
+  .rx-clickable:hover {
+    background: #6bcbff22;
+    color: #a8e6ff;
+    text-decoration: none;
+  }
+  .rx-clickable.rx-copied {
+    background: #1aff7a22;
+    color: #1aff7a;
+  }
+
   .actions {
     display: flex;
     gap: 0.75rem;
@@ -264,19 +281,72 @@
 
   .domains-list {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
+    flex-direction: column;
+    gap: 0.5rem;
     margin-top: 1rem;
   }
 
-  .domain-chip {
-    background: #ff2d2d12;
-    border: 1px solid #ff2d2d30;
-    color: #ff8f8f;
-    font-size: 0.65rem;
-    padding: 3px 10px;
-    border-radius: 6px;
+  .domain-card {
+    background: #0d0d10;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .domain-card-name {
+    font-size: 0.78rem;
+    color: #6bcbff;
     font-weight: 700;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    word-break: break-all;
+    user-select: all;
+  }
+
+  .domain-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .btn-copy-domain {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 6px;
+    background: #ff2d2d18;
+    border: 1px solid #ff2d2d40;
+    color: #ff8f8f;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .btn-copy-domain svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  .btn-copy-domain:hover {
+    background: #ff2d2d30;
+    border-color: #ff2d2d77;
+    color: #ffb3b3;
+  }
+
+  .btn-copy-domain:active { transform: scale(0.96); }
+
+  .btn-copy-domain.copied {
+    background: #1aff7a18;
+    border-color: #1aff7a44;
+    color: #1aff7a;
   }
 </style>
 </head>
@@ -299,7 +369,7 @@
 
   <div class="body">
     <div class="label">Regex Pattern</div>
-    <div class="regex-box" id="regexBox"><span class="rx-anchor">^</span><span class="rx-wild">.+</span><span class="rx-group">(</span><span class="rx-domain">ytstatic.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtube-ui.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtubei.googleapis.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtube.googleapis.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain">www.youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain">m.youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain">ytimg.com</span><span class="rx-pipe">|</span><span class="rx-domain">s.ytimg.com</span><span class="rx-pipe">|</span><span class="rx-domain">ytimg.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtube.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">i.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">googlevideo.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtu.be</span><span class="rx-pipe">|</span><span class="rx-domain">youtube-nocookie.com</span><span class="rx-group">)</span><span class="rx-wild">.*</span><span class="rx-anchor">$</span></div>
+    <div class="regex-box" id="regexBox"><span class="rx-anchor">^</span><span class="rx-wild">.+</span><span class="rx-group">(</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">ytstatic.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">youtube-ui.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">youtubei.googleapis.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">youtube.googleapis.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">www.youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">m.youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">ytimg.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">s.ytimg.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">ytimg.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">youtube.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">i.google.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">googlevideo.com</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">youtu.be</span><span class="rx-pipe">|</span><span class="rx-domain rx-clickable" onclick="copyDomain(this)">youtube-nocookie.com</span><span class="rx-group">)</span><span class="rx-wild">.*</span><span class="rx-anchor">$</span></div>
 
     <div class="actions">
       <button class="btn btn-primary" onclick="copyRegex()">
@@ -320,23 +390,7 @@
     <hr class="divider">
 
     <div class="label">Domain yang diblokir (15 domain)</div>
-    <div class="domains-list">
-      <span class="domain-chip">youtube.com</span>
-      <span class="domain-chip">www.youtube.com</span>
-      <span class="domain-chip">m.youtube.com</span>
-      <span class="domain-chip">youtu.be</span>
-      <span class="domain-chip">youtube-nocookie.com</span>
-      <span class="domain-chip">youtubei.googleapis.com</span>
-      <span class="domain-chip">youtube.googleapis.com</span>
-      <span class="domain-chip">youtube.l.google.com</span>
-      <span class="domain-chip">youtube-ui.l.google.com</span>
-      <span class="domain-chip">ytstatic.l.google.com</span>
-      <span class="domain-chip">ytimg.com</span>
-      <span class="domain-chip">s.ytimg.com</span>
-      <span class="domain-chip">ytimg.l.google.com</span>
-      <span class="domain-chip">i.google.com</span>
-      <span class="domain-chip">googlevideo.com</span>
-    </div>
+    <div class="domains-list" id="domainsList"></div>
 
     <hr class="divider">
 
@@ -367,6 +421,45 @@
 <script>
   const rawRegex = `^.+(ytstatic.l.google.com|youtube-ui.l.google.com|youtubei.googleapis.com|youtube.googleapis.com|youtube.com|www.youtube.com|m.youtube.com|ytimg.com|s.ytimg.com|ytimg.l.google.com|youtube.l.google.com|i.google.com|googlevideo.com|youtu.be|youtube-nocookie.com).*$`;
 
+  const domains = [
+    'youtube.com','www.youtube.com','m.youtube.com','youtu.be',
+    'youtube-nocookie.com','youtubei.googleapis.com','youtube.googleapis.com',
+    'youtube.l.google.com','youtube-ui.l.google.com','ytstatic.l.google.com',
+    'ytimg.com','s.ytimg.com','ytimg.l.google.com','i.google.com','googlevideo.com'
+  ];
+
+  const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+  const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+  const list = document.getElementById('domainsList');
+  domains.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'domain-card';
+    card.innerHTML = `
+      <div class="domain-card-name">${d}</div>
+      <div class="domain-card-footer">
+        <button class="btn-copy-domain">${copyIcon} Salin Domain</button>
+      </div>
+    `;
+    const btn = card.querySelector('.btn-copy-domain');
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(d).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = d; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+      });
+      btn.classList.add('copied');
+      btn.innerHTML = checkIcon + ' Tersalin!';
+      showToast('✓ Tersalin: ' + d);
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = copyIcon + ' Salin Domain';
+      }, 1800);
+    });
+    list.appendChild(card);
+  });
+
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -389,6 +482,19 @@
       document.body.removeChild(ta);
       showToast('✓ Tersalin!');
     });
+  }
+
+  function copyDomain(el) {
+    const domain = el.textContent;
+    navigator.clipboard.writeText(domain).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = domain; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    });
+    el.classList.add('rx-copied');
+    showToast('✓ Tersalin: ' + domain);
+    setTimeout(() => el.classList.remove('rx-copied'), 1800);
   }
 
   function selectAll() {
