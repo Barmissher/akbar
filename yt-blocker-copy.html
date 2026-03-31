@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YT Block — Regex Copier</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --red: #ff2d2d;
+    --red-dim: #c0000088;
+    --bg: #0a0a0b;
+    --surface: #111114;
+    --border: #222228;
+    --text: #e8e8ee;
+    --muted: #555560;
+    --green: #1aff7a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow-x: hidden;
+  }
+
+  /* animated noise grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.35;
+    z-index: 0;
+  }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 780px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: 0 0 60px #ff2d2d14, 0 2px 40px #0007;
+  }
+
+  .header {
+    padding: 2rem 2.5rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 1.2rem;
+  }
+
+  .icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #ff2d2d18;
+    border: 1px solid #ff2d2d44;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+
+  .icon-wrap svg { width: 24px; height: 24px; }
+
+  .header-text h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .header-text p {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.35rem;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  .badge {
+    display: inline-block;
+    background: #ff2d2d22;
+    color: var(--red);
+    border: 1px solid #ff2d2d44;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-top: 0.5rem;
+  }
+
+  .body { padding: 2rem 2.5rem; }
+
+  .label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+  }
+
+  .regex-box {
+    background: #0d0d10;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    font-size: 0.78rem;
+    line-height: 1.75;
+    color: #c8d0ff;
+    word-break: break-all;
+    white-space: pre-wrap;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .regex-box:hover { border-color: #ff2d2d55; }
+
+  /* syntax highlight spans */
+  .rx-anchor { color: #ff6b6b; }
+  .rx-group  { color: #ffd93d; }
+  .rx-domain { color: #6bcbff; }
+  .rx-pipe   { color: #ff6b6b; }
+  .rx-dot    { color: #a8ff78; }
+  .rx-wild   { color: #c77dff; }
+  .rx-plus   { color: #ff6b6b; }
+
+  .actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.73rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.18s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .btn-primary {
+    background: var(--red);
+    color: #fff;
+    box-shadow: 0 0 20px #ff2d2d55;
+  }
+
+  .btn-primary:hover {
+    background: #ff5555;
+    box-shadow: 0 0 30px #ff2d2d88;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    color: var(--text);
+    border-color: #444;
+    background: #ffffff08;
+  }
+
+  .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--green);
+    color: #000;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.6rem 1.4rem;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 100;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.75rem 0;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 500px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .header, .body { padding: 1.5rem; }
+    .header { flex-direction: column; gap: 0.8rem; }
+  }
+
+  .info-card {
+    background: #0d0d10;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+  }
+
+  .info-card .ic-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.4rem;
+  }
+
+  .info-card .ic-val {
+    font-size: 0.8rem;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .domains-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1rem;
+  }
+
+  .domain-chip {
+    background: #ff2d2d12;
+    border: 1px solid #ff2d2d30;
+    color: #ff8f8f;
+    font-size: 0.65rem;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.95C5.12 20 12 20 12 20s6.88 0 8.59-.47a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
+        <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="var(--red)" stroke="none"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>YouTube Block Regex</h1>
+      <p>Regex pattern untuk memblokir YouTube di AdGuard / uBlock Origin / Pi-hole dan sejenisnya.</p>
+      <span class="badge">⛔ Block Rule</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="label">Regex Pattern</div>
+    <div class="regex-box" id="regexBox"><span class="rx-anchor">^</span><span class="rx-wild">.+</span><span class="rx-group">(</span><span class="rx-domain">ytstatic.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtube-ui.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtubei.googleapis.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtube.googleapis.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain">www.youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain">m.youtube.com</span><span class="rx-pipe">|</span><span class="rx-domain">ytimg.com</span><span class="rx-pipe">|</span><span class="rx-domain">s.ytimg.com</span><span class="rx-pipe">|</span><span class="rx-domain">ytimg.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtube.l.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">i.google.com</span><span class="rx-pipe">|</span><span class="rx-domain">googlevideo.com</span><span class="rx-pipe">|</span><span class="rx-domain">youtu.be</span><span class="rx-pipe">|</span><span class="rx-domain">youtube-nocookie.com</span><span class="rx-group">)</span><span class="rx-wild">.*</span><span class="rx-anchor">$</span></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="copyRegex()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        Salin Regex
+      </button>
+      <button class="btn btn-secondary" onclick="selectAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+        Select All
+      </button>
+    </div>
+
+    <hr class="divider">
+
+    <div class="label">Domain yang diblokir (15 domain)</div>
+    <div class="domains-list">
+      <span class="domain-chip">youtube.com</span>
+      <span class="domain-chip">www.youtube.com</span>
+      <span class="domain-chip">m.youtube.com</span>
+      <span class="domain-chip">youtu.be</span>
+      <span class="domain-chip">youtube-nocookie.com</span>
+      <span class="domain-chip">youtubei.googleapis.com</span>
+      <span class="domain-chip">youtube.googleapis.com</span>
+      <span class="domain-chip">youtube.l.google.com</span>
+      <span class="domain-chip">youtube-ui.l.google.com</span>
+      <span class="domain-chip">ytstatic.l.google.com</span>
+      <span class="domain-chip">ytimg.com</span>
+      <span class="domain-chip">s.ytimg.com</span>
+      <span class="domain-chip">ytimg.l.google.com</span>
+      <span class="domain-chip">i.google.com</span>
+      <span class="domain-chip">googlevideo.com</span>
+    </div>
+
+    <hr class="divider">
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="ic-label">Compatible with</div>
+        <div class="ic-val">AdGuard DNS</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Rule type</div>
+        <div class="ic-val">Regex Block</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">Tetap bisa</div>
+        <div class="ic-val">Search &amp; Open Book ✓</div>
+      </div>
+      <div class="info-card">
+        <div class="ic-label">YT diblokir</div>
+        <div class="ic-val">100% ✗</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Tersalin ke clipboard!</div>
+
+<script>
+  const rawRegex = `^.+(ytstatic.l.google.com|youtube-ui.l.google.com|youtubei.googleapis.com|youtube.googleapis.com|youtube.com|www.youtube.com|m.youtube.com|ytimg.com|s.ytimg.com|ytimg.l.google.com|youtube.l.google.com|i.google.com|googlevideo.com|youtu.be|youtube-nocookie.com).*$`;
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function copyRegex() {
+    navigator.clipboard.writeText(rawRegex).then(() => {
+      showToast('✓ Tersalin ke clipboard!');
+    }).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = rawRegex;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('✓ Tersalin!');
+    });
+  }
+
+  function selectAll() {
+    const box = document.getElementById('regexBox');
+    const range = document.createRange();
+    range.selectNodeContents(box);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    showToast('✓ Teks terseleksi!');
+  }
+</script>
+
+</body>
+</html>
