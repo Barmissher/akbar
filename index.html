@@ -33,7 +33,6 @@
     overflow-x: hidden;
   }
 
-  /* animated noise grain overlay */
   body::before {
     content: '';
     position: fixed;
@@ -137,7 +136,6 @@
 
   .regex-box:hover { border-color: #ff2d2d55; }
 
-  /* syntax highlight spans */
   .rx-anchor { color: #ff6b6b; }
   .rx-group  { color: #ffd93d; }
   .rx-domain { color: #6bcbff; }
@@ -161,6 +159,7 @@
   .rx-clickable.rx-copied {
     background: #1aff7a22;
     color: #1aff7a;
+    text-decoration: none;
   }
 
   .actions {
@@ -291,6 +290,12 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  /* Domain card turns green border when copied */
+  .domain-card.copied {
+    border-color: #1aff7a44;
   }
 
   .domain-card-name {
@@ -301,6 +306,12 @@
     border-bottom: 1px solid var(--border);
     word-break: break-all;
     user-select: all;
+    transition: color 0.2s;
+  }
+
+  .domain-card.copied .domain-card-name {
+    color: #1aff7a;
+    border-bottom-color: #1aff7a22;
   }
 
   .domain-card-footer {
@@ -343,9 +354,17 @@
 
   .btn-copy-domain:active { transform: scale(0.96); }
 
+  /* Permanently green after copied — no reset */
   .btn-copy-domain.copied {
     background: #1aff7a18;
-    border-color: #1aff7a44;
+    border-color: #1aff7a55;
+    color: #1aff7a;
+    cursor: default;
+  }
+
+  .btn-copy-domain.copied:hover {
+    background: #1aff7a22;
+    border-color: #1aff7a77;
     color: #1aff7a;
   }
 </style>
@@ -443,19 +462,22 @@
     `;
     const btn = card.querySelector('.btn-copy-domain');
     btn.addEventListener('click', () => {
+      // If already copied, do nothing
+      if (btn.classList.contains('copied')) return;
+
       navigator.clipboard.writeText(d).catch(() => {
         const ta = document.createElement('textarea');
         ta.value = d; ta.style.position='fixed'; ta.style.opacity='0';
         document.body.appendChild(ta); ta.select();
         document.execCommand('copy'); document.body.removeChild(ta);
       });
+
+      // Permanently mark as copied — no setTimeout reset
       btn.classList.add('copied');
       btn.innerHTML = checkIcon + ' Tersalin!';
+      card.classList.add('copied');
+
       showToast('✓ Tersalin: ' + d);
-      setTimeout(() => {
-        btn.classList.remove('copied');
-        btn.innerHTML = copyIcon + ' Salin Domain';
-      }, 1800);
     });
     list.appendChild(card);
   });
@@ -471,7 +493,6 @@
     navigator.clipboard.writeText(rawRegex).then(() => {
       showToast('✓ Tersalin ke clipboard!');
     }).catch(() => {
-      // fallback
       const ta = document.createElement('textarea');
       ta.value = rawRegex;
       ta.style.position = 'fixed';
@@ -485,6 +506,7 @@
   }
 
   function copyDomain(el) {
+    // If already copied in regex box, still allow re-copy but keep green
     const domain = el.textContent;
     navigator.clipboard.writeText(domain).catch(() => {
       const ta = document.createElement('textarea');
@@ -494,7 +516,7 @@
     });
     el.classList.add('rx-copied');
     showToast('✓ Tersalin: ' + domain);
-    setTimeout(() => el.classList.remove('rx-copied'), 1800);
+    // rx-copied stays permanently (no setTimeout to remove it)
   }
 
   function selectAll() {
